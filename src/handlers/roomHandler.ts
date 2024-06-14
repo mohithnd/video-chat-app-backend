@@ -3,6 +3,7 @@ import { v4 as UUIDv4 } from "uuid";
 import IRoomParams from "../interfaces/IRoomParams";
 
 const rooms: Record<string, string[]> = {};
+const socketToPeer: Record<string, string> = {};
 
 const roomHandler = (socket: Socket) => {
   const createRoom = () => {
@@ -28,6 +29,8 @@ const roomHandler = (socket: Socket) => {
 
       socket.join(roomId);
 
+      socketToPeer[socket.id] = peerId;
+
       socket.on("ready", () => {
         socket.to(roomId).emit("user-joined", { peerId });
       });
@@ -39,8 +42,23 @@ const roomHandler = (socket: Socket) => {
     }
   };
 
+  const disconnect = () => {
+    const peerId = socketToPeer[socket.id];
+
+    Object.keys(rooms).forEach((roomId) => {
+      const index = rooms[roomId].indexOf(peerId);
+
+      if (index !== -1) {
+        rooms[roomId].splice(index, 1);
+
+        socket.to(roomId).emit("user-disconnected", { peerId });
+      }
+    });
+  };
+
   socket.on("create-room", createRoom);
   socket.on("joined-room", joinedRoom);
+  socket.on("disconnect", disconnect);
 };
 
 export default roomHandler;
