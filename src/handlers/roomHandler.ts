@@ -56,8 +56,19 @@ const roomHandler = (socket: Socket) => {
     });
   };
 
+  const sendMessage = ({
+    roomId,
+    message,
+  }: {
+    roomId: string;
+    message: string;
+  }) => {
+    socket.to(roomId).emit("receive-message", { message });
+  };
+
   socket.on("create-room", createRoom);
   socket.on("joined-room", joinedRoom);
+  socket.on("send-message", sendMessage);
   socket.on("disconnect", disconnect);
 };
 
