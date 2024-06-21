@@ -1,11 +1,11 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { v4 as UUIDv4 } from "uuid";
 import IRoomParams from "../interfaces/IRoomParams";
 
 const rooms: Record<string, string[]> = {};
 const socketToPeer: Record<string, string> = {};
 
-const roomHandler = (socket: Socket) => {
+const roomHandler = (socket: Socket, io: Server) => {
   const createRoom = () => {
     const roomId = UUIDv4();
     socket.join(roomId);
@@ -59,11 +59,13 @@ const roomHandler = (socket: Socket) => {
   const sendMessage = ({
     roomId,
     message,
+    senderId,
   }: {
     roomId: string;
     message: string;
+    senderId: string;
   }) => {
-    socket.to(roomId).emit("receive-message", { message });
+    io.in(roomId).emit("receive-message", { message, senderId });
   };
 
   socket.on("create-room", createRoom);
