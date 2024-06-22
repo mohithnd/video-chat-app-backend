@@ -6,9 +6,7 @@ import cors from "cors";
 import roomHandler from "./handlers/roomHandler";
 
 const app = express();
-
 app.use(cors());
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -20,7 +18,6 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
   console.log("New User Connected");
-
   roomHandler(socket, io);
 
   socket.on("disconnect", () => {

@@ -10,9 +10,9 @@ const roomHandler = (socket: Socket, io: Server) => {
     const roomId = UUIDv4();
     socket.join(roomId);
     rooms[roomId] = [];
-    socket.emit("room-created", { roomId });
-
     console.log("Room Created With Id", roomId);
+
+    socket.emit("room-created", { roomId });
   };
 
   const joinedRoom = ({ roomId, peerId }: IRoomParams) => {
@@ -24,11 +24,8 @@ const roomHandler = (socket: Socket, io: Server) => {
         peerId
       );
       rooms[roomId].push(peerId);
-
       console.log("Added Peer To Room", rooms);
-
       socket.join(roomId);
-
       socketToPeer[socket.id] = peerId;
 
       socket.on("ready", () => {
@@ -44,13 +41,10 @@ const roomHandler = (socket: Socket, io: Server) => {
 
   const disconnect = () => {
     const peerId = socketToPeer[socket.id];
-
     Object.keys(rooms).forEach((roomId) => {
       const index = rooms[roomId].indexOf(peerId);
-
       if (index !== -1) {
         rooms[roomId].splice(index, 1);
-
         socket.to(roomId).emit("user-disconnected", { peerId });
       }
     });
@@ -60,12 +54,14 @@ const roomHandler = (socket: Socket, io: Server) => {
     roomId,
     message,
     senderId,
+    timestamp,
   }: {
     roomId: string;
     message: string;
     senderId: string;
+    timestamp: string;
   }) => {
-    io.in(roomId).emit("receive-message", { message, senderId });
+    io.in(roomId).emit("receive-message", { message, senderId, timestamp });
   };
 
   socket.on("create-room", createRoom);
