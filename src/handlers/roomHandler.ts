@@ -61,7 +61,13 @@ const roomHandler = (socket: Socket, io: Server) => {
     senderId: string;
     timestamp: string;
   }) => {
-    io.in(roomId).emit("receive-message", { message, senderId, timestamp });
+    const messageId = UUIDv4();
+    io.in(roomId).emit("receive-message", {
+      message,
+      senderId,
+      timestamp,
+      messageId,
+    });
   };
 
   socket.on("create-room", createRoom);
