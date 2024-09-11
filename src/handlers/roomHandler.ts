@@ -1,9 +1,11 @@
 import { Server, Socket } from "socket.io";
 import { v4 as UUIDv4 } from "uuid";
 import IRoomParams from "../interfaces/IRoomParams";
+import IMessage from "../interfaces/IMessage";
 
 const rooms: Record<string, string[]> = {};
 const socketToPeer: Record<string, string> = {};
+const chats: Record<string, IMessage[]> = {};
 
 const roomHandler = (socket: Socket, io: Server) => {
   const createRoom = () => {
@@ -62,6 +64,12 @@ const roomHandler = (socket: Socket, io: Server) => {
     timestamp: string;
   }) => {
     const messageId = UUIDv4();
+
+    if (!chats[roomId]) {
+      chats[roomId] = [];
+    }
+    chats[roomId].push({ text: message, senderId, timestamp, messageId });
+
     io.in(roomId).emit("receive-message", {
       message,
       senderId,
@@ -70,10 +78,22 @@ const roomHandler = (socket: Socket, io: Server) => {
     });
   };
 
+  const sendChats = ({ roomId }: { roomId: string }) => {
+    if (!chats[roomId]) {
+      chats[roomId] = [];
+    }
+    const chatsToBeSent = chats[roomId];
+
+    socket.emit("receive-chats", {
+      chats: chatsToBeSent,
+    });
+  };
+
   socket.on("create-room", createRoom);
   socket.on("joined-room", joinedRoom);
   socket.on("send-message", sendMessage);
   socket.on("disconnect", disconnect);
+  socket.on("send-chats", sendChats);
 };
 
 export default roomHandler;
