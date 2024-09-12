@@ -12,42 +12,40 @@ const roomHandler = (socket: Socket, io: Server) => {
     const roomId = UUIDv4();
     socket.join(roomId);
     rooms[roomId] = [];
-    console.log("Room Created With Id", roomId);
-
+    console.log(`Room created: ${roomId}`);
     socket.emit("room-created", { roomId });
   };
 
   const joinedRoom = ({ roomId, peerId }: IRoomParams) => {
     if (rooms[roomId]) {
-      console.log(
-        "New User Has Joined Room",
-        roomId,
-        "With Peer ID As",
-        peerId
-      );
       rooms[roomId].push(peerId);
-      console.log("Added Peer To Room", rooms);
       socket.join(roomId);
       socketToPeer[socket.id] = peerId;
+      console.log(`Peer ${peerId} joined room: ${roomId}`);
 
       socket.on("ready", () => {
         socket.to(roomId).emit("user-joined", { peerId });
+        console.log(`User ${peerId} is ready in room: ${roomId}`);
       });
 
       socket.emit("get-users", {
         roomId,
         participants: rooms[roomId],
       });
+    } else {
+      console.log(`Room ${roomId} does not exist.`);
     }
   };
 
   const disconnect = () => {
     const peerId = socketToPeer[socket.id];
+    console.log(`Peer ${peerId} disconnected`);
     Object.keys(rooms).forEach((roomId) => {
       const index = rooms[roomId].indexOf(peerId);
       if (index !== -1) {
         rooms[roomId].splice(index, 1);
         socket.to(roomId).emit("user-disconnected", { peerId });
+        console.log(`Peer ${peerId} removed from room: ${roomId}`);
       }
     });
   };
@@ -69,6 +67,7 @@ const roomHandler = (socket: Socket, io: Server) => {
       chats[roomId] = [];
     }
     chats[roomId].push({ text: message, senderId, timestamp, messageId });
+    console.log(`Message sent in room ${roomId} from ${senderId}: ${message}`);
 
     io.in(roomId).emit("receive-message", {
       message,
@@ -83,6 +82,7 @@ const roomHandler = (socket: Socket, io: Server) => {
       chats[roomId] = [];
     }
     const chatsToBeSent = chats[roomId];
+    console.log(`Sending chats for room ${roomId}`);
 
     socket.emit("receive-chats", {
       chats: chatsToBeSent,

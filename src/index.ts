@@ -17,14 +17,14 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("New User Connected");
+  console.log(`New connection: ${socket.id}`);
   roomHandler(socket, io);
 
   socket.on("disconnect", () => {
-    console.log("User Disconnected");
+    console.log(`Connection ${socket.id} disconnected`);
   });
 });
 
 server.listen(serverConfig.PORT, () => {
-  console.log(`Server Is Up At Port ${serverConfig.PORT}`);
+  console.log(`Server is running on port ${serverConfig.PORT}`);
 });
